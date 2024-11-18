@@ -30,6 +30,7 @@ class VESC(object):
 
         self.heart_beat_thread = threading.Thread(target=self._heartbeat_cmd_func)
         self._stop_heartbeat = threading.Event()
+        self._lock = threading.Lock()
 
         if start_heartbeat:
             self.start_heartbeat()
@@ -86,12 +87,13 @@ class VESC(object):
         :param num_read_bytes: number of bytes to read for decoding response
         :return: decoded response from buffer
         """
-        self.serial_port.write(data)
-        if num_read_bytes is not None:
-            while self.serial_port.in_waiting <= num_read_bytes:
-                time.sleep(0.000001)  # add some delay just to help the CPU
-            response, consumed = decode(self.serial_port.read(self.serial_port.in_waiting))
-            return response
+        with self._lock:
+            self.serial_port.write(data)
+            if num_read_bytes is not None:
+                while self.serial_port.in_waiting <= num_read_bytes:
+                    time.sleep(0.000001)  # add some delay just to help the CPU
+                response, consumed = decode(self.serial_port.read(self.serial_port.in_waiting))
+                return response
 
     def set_rpm(self, new_rpm):
         """
