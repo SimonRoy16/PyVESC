@@ -36,6 +36,8 @@ class VESC(object):
 
         # check firmware version and set GetValue fields to old values if pre version 3.xx
         version = self.get_firmware_version()
+        if version is None:
+            raise RuntimeError("Could not get firmware version.")
         if int(version.split('.')[0]) < 3:
             GetValues.fields = pre_v3_33_fields
 
