@@ -37,8 +37,14 @@ class VESC(object):
 
         # check firmware version and set GetValue fields to old values if pre version 3.xx
         version = self.get_firmware_version()
-        if version is None:
-            raise RuntimeError("Could not get firmware version.")
+        max_tries = 99
+        while version is None or version == "None":
+            version = self.get_firmware_version()
+            print("Could not get firmware version. Retrying...")
+            max_tries -= 1
+            if max_tries == 0:
+                raise Exception("Could not get firmware version. Check connection and try again.")
+        print("VESC firmware version: " + version)
         if int(version.split('.')[0]) < 3:
             GetValues.fields = pre_v3_33_fields
 
@@ -88,12 +94,14 @@ class VESC(object):
         :return: decoded response from buffer
         """
         with self._lock:
+            self.serial_port.reset_input_buffer()
             self.serial_port.write(data)
             if num_read_bytes is not None:
                 while self.serial_port.in_waiting <= num_read_bytes:
                     time.sleep(0.000001)  # add some delay just to help the CPU
                 response, consumed = decode(self.serial_port.read(self.serial_port.in_waiting))
                 return response
+            return None
 
     def set_rpm(self, new_rpm):
         """
