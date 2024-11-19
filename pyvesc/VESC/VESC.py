@@ -20,6 +20,7 @@ class VESC(object):
         :param baudrate: baudrate for the serial communication. Shouldn't need to change this.
         :param timeout: timeout for the serial communication
         """
+        print("*** This is a custom version of PyVESC for back to back dyno testing***")
 
         if serial is None:
             raise ImportError("Need to install pyserial in order to use the VESCMotor class.")
